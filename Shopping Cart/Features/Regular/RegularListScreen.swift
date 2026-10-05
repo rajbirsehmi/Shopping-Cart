@@ -4,7 +4,6 @@ import SwiftData
 struct RegularListScreen: View {
     @Environment(\.modelContext) private var modelContext
     
-    // Automatically queries and listens for changes on non-important items
     @Query(filter: #Predicate<Item> { $0.isImportant == false },
            sort: [SortDescriptor(\Item.timestamp, order: .reverse)])
     private var items: [Item]

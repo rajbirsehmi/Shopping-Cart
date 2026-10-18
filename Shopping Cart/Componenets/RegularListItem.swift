@@ -12,41 +12,36 @@ struct RegularListItem: View {
     var onToggle: () -> Void
     
     var body: some View {
-        HStack(spacing: 14) {
-            Spacer()
-                .frame(width: 0, height: 36)
-                .hidden()
-            
+        HStack(spacing: 16) {
             Text(item.itemName)
                 .strikethrough(item.isChecked, color: .secondary)
                 .foregroundColor(item.isChecked ? .secondary : .primary)
                 .font(.body)
                 .fontWeight(.medium)
+                .animation(.easeInOut(duration: 0.2), value: item.isChecked)
             
             Spacer()
             
-            Button(action: onToggle) {
+            Button(action: {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                    onToggle()
+                }
+            }) {
                 Image(systemName: item.isChecked ? "checkmark.circle.fill" : "circle")
-                    .font(.title2)
-                    .foregroundColor(item.isChecked ? .blue : .secondary)
+                    .font(.system(size: 24))
+                    .foregroundColor(item.isChecked ? .blue : .secondary.opacity(0.6))
+                    .scaleEffect(item.isChecked ? 1.1 : 1.0)
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(UIColor.secondarySystemBackground))
-                .shadow(color: Color.black.opacity(0.03), radius: 5, x: 0, y: 2)
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(UIColor.systemBackground))
+                .shadow(color: Color.black.opacity(item.isChecked ? 0.01 : 0.04), radius: 8, x: 0, y: 3)
         )
-        .animation(.snappy, value: item.isChecked)
+        .scaleEffect(item.isChecked ? 0.98 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: item.isChecked)
     }
-}
-
-#Preview {
-    RegularListItem(
-        item: Item(itemName: "Milk", isChecked: false, isImportant: false, isNotifiable: false, timestamp: Int64(Date().timeIntervalSince1970)),
-        onToggle: {}
-    )
-    .padding()
 }

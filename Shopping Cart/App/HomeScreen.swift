@@ -4,11 +4,10 @@ import SwiftData
 struct HomeScreen: View {
     @Environment(\.modelContext) private var modelContext
     
-    // Use the shared NotificationManager instance to control the selected tab
     @State private var notificationManager = NotificationManager.shared
     @State private var showingAddSheet = false
     
-    // Form fields for the centralized creation sheet
+    // Form fields for centralized creation sheet
     @State private var newItemName = ""
     @State private var isImportant = false
     @State private var isNotifiable = false
@@ -18,45 +17,70 @@ struct HomeScreen: View {
         NavigationStack {
             TabView(selection: Binding(
                 get: { notificationManager.selectedTab },
-                set: { notificationManager.selectedTab = $0 }
+                set: { newValue in
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        notificationManager.selectedTab = newValue
+                    }
+                }
             )) {
                 RegularListScreen()
                     .tabItem {
-                        Label("Regular List", systemImage: "list.bullet")
+                        Label("Regular", systemImage: "list.bullet.circle.fill")
                     }
                     .tag(0)
                  
                 ImportantListScreen()
                     .tabItem {
-                        Label("Important List", systemImage: "exclamationmark.circle")
+                        Label("Important", systemImage: "exclamationmark.circle.fill")
                     }
                     .tag(1)
             }
-            .navigationTitle(notificationManager.selectedTab == 0 ? "Regular Items" : "Important Items")
+            .accentColor(notificationManager.selectedTab == 0 ? .blue : .orange)
+            .navigationTitle(notificationManager.selectedTab == 0 ? "Shopping List" : "Priority Items")
             .toolbar {
-                // Centralized Add Button in the Top Bar
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: {
-                        showingAddSheet = true
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            showingAddSheet = true
+                        }
                     }) {
                         Image(systemName: "plus")
-                            .font(.headline)
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(10)
+                            .background(
+                                Circle()
+                                    .fill(notificationManager.selectedTab == 0 ? Color.blue : Color.orange)
+                            )
                     }
                 }
             }
-            // Centralized Add Item Sheet
+            // Add Item Sheet
             .sheet(isPresented: $showingAddSheet) {
                 NavigationStack {
                     Form {
-                        Section("Item Details") {
-                            TextField("Item Name", text: $newItemName)
+                        Section {
+                            TextField("What do you need?", text: $newItemName)
+                                .font(.body)
+                                .padding(.vertical, 4)
+                        } header: {
+                            Text("Item Details")
                         }
                         
-                        Section("Properties") {
-                            Toggle("Mark as Important", isOn: $isImportant)
-                            if isImportant {
-                                Toggle("Enable Notifications", isOn: $isNotifiable)
+                        Section {
+                            Toggle(isOn: $isImportant) {
+                                Label("Mark as Important", systemImage: "exclamationmark.triangle.fill")
+                                    .foregroundColor(.orange)
                             }
+                            
+                            if isImportant {
+                                Toggle(isOn: $isNotifiable) {
+                                    Label("Enable Reminder", systemImage: "bell.fill")
+                                        .foregroundColor(.blue)
+                                }
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                            }
+                            
                             if isNotifiable {
                                 DatePicker(
                                     "Reminder Time",
@@ -66,6 +90,8 @@ struct HomeScreen: View {
                                 )
                                 .transition(.opacity.combined(with: .move(edge: .top)))
                             }
+                        } header: {
+                            Text("Configuration")
                         }
                     }
                     .navigationTitle("New Item")
@@ -76,6 +102,7 @@ struct HomeScreen: View {
                                 resetForm()
                                 showingAddSheet = false
                             }
+                            .foregroundColor(.secondary)
                         }
                         ToolbarItem(placement: .confirmationAction) {
                             Button("Save") {
@@ -102,10 +129,13 @@ struct HomeScreen: View {
                                 resetForm()
                                 showingAddSheet = false
                             }
+                            .fontWeight(.bold)
+                            .disabled(newItemName.trimmingCharacters(in: .whitespaces).isEmpty)
                         }
                     }
                 }
                 .presentationDetents([.medium, .large])
+                .presentationCornerRadius(24)
             }
         }
     }
@@ -116,12 +146,4 @@ struct HomeScreen: View {
         isNotifiable = false
         notificationDate = Date()
     }
-}
-
-#Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Item.self, configurations: config)
-    
-    return HomeScreen()
-        .modelContainer(container)
 }

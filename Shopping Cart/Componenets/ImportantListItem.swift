@@ -16,8 +16,8 @@ struct ImportantListItem: View {
         HStack(spacing: 14) {
             ZStack {
                 Circle()
-                    .fill(Color.orange.opacity(0.15))
-                    .frame(width: 36, height: 36)
+                    .fill(Color.orange.opacity(0.12))
+                    .frame(width: 38, height: 38)
                 
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundColor(.orange)
@@ -28,51 +28,47 @@ struct ImportantListItem: View {
                 .strikethrough(item.isChecked, color: .secondary)
                 .foregroundColor(item.isChecked ? .secondary : .primary)
                 .font(.body)
-                .fontWeight(.medium)
+                .fontWeight(.semibold)
+                .animation(.easeInOut(duration: 0.2), value: item.isChecked)
             
             Spacer()
             
             if let onToggleNotification = onToggleNotification {
                 Button(action: onToggleNotification) {
                     Image(systemName: item.isNotifiable ? "bell.fill" : "bell.slash.fill")
-                        .foregroundColor(item.isNotifiable ? .blue : .secondary.opacity(0.5))
-                        .font(.subheadline)
-                        .padding(8)
-                        .background(Color.secondary.opacity(0.1))
+                        .foregroundColor(item.isNotifiable ? .orange : .secondary.opacity(0.4))
+                        .font(.system(size: 14))
+                        .padding(10)
+                        .background(Color.orange.opacity(item.isNotifiable ? 0.12 : 0.05))
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
             }
             
-            Button(action: onToggle) {
+            Button(action: {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                    onToggle()
+                }
+            }) {
                 Image(systemName: item.isChecked ? "checkmark.circle.fill" : "circle")
-                    .font(.title2)
-                    .foregroundColor(item.isChecked ? .orange : .secondary)
+                    .font(.system(size: 24))
+                    .foregroundColor(item.isChecked ? .orange : .secondary.opacity(0.6))
+                    .scaleEffect(item.isChecked ? 1.1 : 1.0)
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(UIColor.secondarySystemBackground))
-                .shadow(color: Color.black.opacity(0.03), radius: 5, x: 0, y: 2)
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(UIColor.systemBackground))
+                .shadow(color: Color.black.opacity(item.isChecked ? 0.01 : 0.04), radius: 8, x: 0, y: 3)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(item.isChecked ? Color.clear : Color.orange.opacity(0.2), lineWidth: 1)
+                )
         )
-        .animation(.snappy, value: item.isChecked)
+        .scaleEffect(item.isChecked ? 0.98 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: item.isChecked)
     }
-}
-
-#Preview {
-    ImportantListItem(
-        item: Item(
-            itemName: "Organic Coffee Beans",
-            isChecked: false,
-            isImportant: true,
-            isNotifiable: true,
-            timestamp: Int64(Date().timeIntervalSince1970)
-        ),
-        onToggle: {},
-        onToggleNotification: {}
-    )
-    .padding()
 }
